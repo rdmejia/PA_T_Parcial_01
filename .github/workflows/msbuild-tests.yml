@@ -52,15 +52,13 @@ jobs:
 
     - name: Tests E01
       run: |
-       vstest.console.exe /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common /TestCaseFilter:"FullyQualifiedName~E01" .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E01results.log;
+       vstest.console.exe /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common /TestCaseFilter:"FullyQualifiedName~E01" .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E01results.log; if ($LASTEXITCODE -ne 0) { echo "" }
        cat E01results.log;
-       if ($LASTEXITCODE -ne 0) { echo "" }
     
     - name: Tests E02
       run: |
-       vstest.console.exe /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common /TestCaseFilter:"FullyQualifiedName~E02" .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E02results.log;
+       vstest.console.exe /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common /TestCaseFilter:"FullyQualifiedName~E02" .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E02results.log; if ($LASTEXITCODE -ne 0) { echo "" }
        cat E02results.log;
-       if ($LASTEXITCODE -ne 0) { echo "" }
     
     - name: Results
       run: |
