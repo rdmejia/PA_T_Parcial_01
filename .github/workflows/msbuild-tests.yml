@@ -1,0 +1,98 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: MSBuildTests
+
+on:
+  push:
+    branches: [ "main", "solution" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+  E01_MAX_GRADE: 30
+  E02_MAX_GRADE: 40
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Install Google Test Adapter
+      run: nuget install GoogleTestAdapter -Version 0.18.0
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=x86 ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Setup VSTest Path
+      uses: darenm/Setup-VSTest@v1.2
+
+    - name: Tests E01
+      run: |
+       vstest.console.exe /TestCaseFilter:"FullyQualifiedName~E01" \
+       /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E01results.log;\
+       if ($LASTEXITCODE -ne 0) { echo "" } \
+       cat E01results.log
+    
+    - name: Tests E02
+      run: |
+       vstest.console.exe /TestCaseFilter:"FullyQualifiedName~E02" \
+       /TestAdapterPath:GoogleTestAdapter.0.18.0\build\_common .\${{env.BUILD_CONFIGURATION}}\Tests_Parcial_01.exe > E02results.log;\
+       cat E02results.log
+       if ($LASTEXITCODE -ne 0) { echo "" } \
+    
+    - name: Results
+      run: |
+        $E01_TOTAL_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E01_TOTAL_TESTS = [double]($E01_TOTAL_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
+        $E01_PASSED_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E01_PASSED_TESTS = [double]($E01_PASSED_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
+        $E01_FAILED_TESTS = $E01_TOTAL_TESTS - $E01_PASSED_TESTS
+        $E01_GRADE = ($E01_PASSED_TESTS / $E01_TOTAL_TESTS) * ${{env.E01_MAX_GRADE}}
+        echo "======================E01======================"
+        echo "Passed Tests: $E01_PASSED_TESTS | Failed Tests: $E01_FAILED_TESTS | Total: $E01_TOTAL_TESTS"
+        echo "Nota: $E01_GRADE / ${{env.E01_MAX_GRADE}}"
+        echo "==============================================="
+
+        $E02_TOTAL_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E02_TOTAL_TESTS = [double]($E02_TOTAL_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
+        $E02_PASSED_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E02_PASSED_TESTS = [double]($E02_PASSED_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
+        $E02_FAILED_TESTS = $E02_TOTAL_TESTS - $E02_PASSED_TESTS
+        $E02_GRADE = ($E02_PASSED_TESTS / $E02_TOTAL_TESTS) * ${{env.E02_MAX_GRADE}}
+        echo "======================E02======================"
+        echo "Passed Tests: $E02_PASSED_TESTS | Failed Tests: $E02_FAILED_TESTS | Total: $E02_TOTAL_TESTS"
+        echo "Nota: $E02_GRADE / ${{env.E02_MAX_GRADE}}"
+        echo "==============================================="
+
+        $TOTAL_GRADE = $E01_GRADE + $E02_GRADE
+        echo "==============================================="
+        echo "TOTAL: $TOTAL_GRADE"
+        echo "==============================================="
+
+        $MAX_GRADE = ${{env.E01_MAX_GRADE}} + ${{env.E02_MAX_GRADE}}
+
+        if ( $TOTAL_GRADE -ne $MAX_GRADE ) { exit 1 }
