@@ -64,9 +64,9 @@ jobs:
     - name: Results
       if: success() || failure()
       run: |
-        $E01_TOTAL_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E01_TOTAL_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+").Matches.Value
         $E01_TOTAL_TESTS = [double]($E01_TOTAL_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
-        $E01_PASSED_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+").Matches.Value"
+        $E01_PASSED_TESTS = (Select-String -Path .\E01results.log -Pattern "Total\s+tests:\s+[0-9]+").Matches.Value
         $E01_PASSED_TESTS = [double]($E01_PASSED_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
         $E01_FAILED_TESTS = $E01_TOTAL_TESTS - $E01_PASSED_TESTS
         $E01_GRADE = ($E01_PASSED_TESTS / $E01_TOTAL_TESTS) * ${{env.E01_MAX_GRADE}}
@@ -75,9 +75,9 @@ jobs:
         echo "Nota: $E01_GRADE / ${{env.E01_MAX_GRADE}}"
         echo "==============================================="
 
-        $E02_TOTAL_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E02_TOTAL_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+").Matches.Value
         $E02_TOTAL_TESTS = [double]($E02_TOTAL_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
-        $E02_PASSED_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+).Matches.Value"
+        $E02_PASSED_TESTS = (Select-String -Path .\E02results.log -Pattern "Total\s+tests:\s+[0-9]+").Matches.Value
         $E02_PASSED_TESTS = [double]($E02_PASSED_TESTS | Select-String -Pattern "[0-9]+").Matches.Value
         $E02_FAILED_TESTS = $E02_TOTAL_TESTS - $E02_PASSED_TESTS
         $E02_GRADE = ($E02_PASSED_TESTS / $E02_TOTAL_TESTS) * ${{env.E02_MAX_GRADE}}
